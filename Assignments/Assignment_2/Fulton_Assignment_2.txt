@@ -1,0 +1,18 @@
+# Task 4: List all .csv files in the Data/ directory
+csv_files = list.files("Data", pattern = "\\.csv$")
+# Task 5: Count how many .csv files were found
+length(csv_files)
+# Task 6: Read in wingspan_vs_mass.csv
+df = read.csv("Data/wingspan_vs_mass.csv")
+# Task 7: Inspect the first 5 lines of df
+head(df)
+# Task 8: Find files in Data/ starting with lowercase "b", searching subfolders too
+b_files = list.files("Data", pattern = "^b", recursive = TRUE)
+# Task 9: Print the first line of each "b" file using a for-loop
+for (file in b_files) {
+  print(readLines(file.path("Data", file), n = 1))
+}
+# Task 10: Print the first line of each .csv file using a for-loop
+for (file in csv_files) {
+  print(readLines(file.path("Data", file), n = 1))
+}
