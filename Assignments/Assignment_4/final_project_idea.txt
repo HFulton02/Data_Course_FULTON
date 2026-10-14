@@ -1,0 +1,16 @@
+Final Project Idea
+ 
+For my final project, I want to report on the relationship
+between soda consumption and dental cavity rates.
+As a pre-dental student, I like to focus my projects
+on how dietary habits connect to oral health outcomes,
+which is directly relevant to my future career.
+
+Data:
+Since I don't have a real dataset yet, I will create a 
+fake dataset with one row per person, including columns
+for soda intake and number of cavities, to show what
+my real data might look like and how I'd analyze it.
+
+I expect to see a positive relationship: people with
+higher soda intake will tend to have more cavities.
