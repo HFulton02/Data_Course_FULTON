@@ -1,8 +1,11 @@
+install.packages('tidyverse')
+install.packages('gganimate')
+
 library(tidyverse)
 library(gganimate)
 
 ## 1. Load the untidy data
-dat = read.csv("Data/BioLog_Plate_Data.csv")
+dat = read.csv("../../Data/BioLog_Plate_Data.csv")
 
 ## 2. Tidy into long form + add Soil/Water column
 
