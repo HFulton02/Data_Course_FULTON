@@ -8,6 +8,7 @@
 
 
 library(tidyverse)
+library(ggplot2)
 
 ##########################
 #        Part 1          #
@@ -17,11 +18,12 @@ library(tidyverse)
 utah = read.csv("./Utah_Religions_by_County.csv")
 
 # subset to only counties with buddhists observed
-buddhist = utah[utah$Buddhism.Mahayana > 0,]
+buddhist = utah %>%
+  filter(Buddhism.Mahayana > 0)
 
 # order rows by population (descending)
-buddhist = buddhist[order(buddhist$Pop_2010, decreasing = TRUE),]
-
+buddhist = buddhist %>%
+  arrange(desc(Pop_2010))
 
 # write this new dataframe to a file
 write.csv(buddhist, file = "./buddhist_counties.csv", row.names = FALSE, quote = FALSE)
@@ -34,43 +36,27 @@ groups = kmeans(utah$Pop_2010,6) # clusters data into 6 groups based on proximit
 utah$Pop.Group = groups$cluster # assigns a new variable to utah giving group for each county
 
 # subset to each group and find summary stats on Religiosity for each
-group1 = mean(utah[utah$Pop.Group == 1,]$Religious)
-group2 = mean(utah[utah$Pop.Group == 2,]$Religious)
-group3 = mean(utah[utah$Pop.Group == 3,]$Religious)
-group4 = mean(utah[utah$Pop.Group == 4,]$Religious)
-group5 = mean(utah[utah$Pop.Group == 5,]$Religious)
-group6 = mean(utah[utah$Pop.Group == 6,]$Religious)
-
-# same, but mean population
-group1.pop = mean(utah[utah$Pop.Group == 1,]$Pop_2010)
-group2.pop = mean(utah[utah$Pop.Group == 2,]$Pop_2010)
-group3.pop = mean(utah[utah$Pop.Group == 3,]$Pop_2010)
-group4.pop = mean(utah[utah$Pop.Group == 4,]$Pop_2010)
-group5.pop = mean(utah[utah$Pop.Group == 5,]$Pop_2010)
-group6.pop = mean(utah[utah$Pop.Group == 6,]$Pop_2010)
-
-
-# make data frame of each group and mean religiosity
-religiosity = data.frame(Pop.Group = c("group1","group2","group3","group4","group5","group6"),
-           Mean.Religiosity = c(group1,group2,group3,group4,group5,group6),
-           Mean.Pop = c(group1.pop,group2.pop,group3.pop,group4.pop,group5.pop,group6.pop))
-
-
+religiosity = utah %>%
+  group_by(Pop.Group) %>%
+  summarize(Mean.Religiosity = mean(Religious),
+            Mean.Pop = mean(Pop_2010))
 
 
 religiosity # take quick look at resulting table
 
 # order by decreasing population
-religiosity = religiosity[order(religiosity$Mean.Pop, decreasing = TRUE),]
+religiosity = religiosity %>%
+  arrange(desc(Mean.Pop))
 
 
 religiosity # take quick look at resulting table
 
 
 # plot that table (redo this using ggplot)
-plot(x=religiosity$Mean.Pop,y=religiosity$Mean.Religiosity)
-
-
+ggplot(religiosity,aes(x = Mean.Pop, y = Mean.Religiosity)) +
+  geom_point(size = 3) +
+  labs(title = "Mean Religiosity by Population Group", x = "Mean Population", y = "Mean Proportion Religious") +
+  theme_bw()
 
 
 #####################################
@@ -88,12 +74,48 @@ utah %>%
   ggplot(aes(x=Proportion,y=Religious)) + geom_point() + geom_smooth(method="lm") + lims(y=c(0,1)) +
   facet_wrap(~Religion,scales = "free") + theme_bw() + theme(panel.grid = element_blank(), strip.background = element_rect(fill="Gray"))
 
+# -------------------------------------------------------------------
+# Extra: does population correlate with any SPECIFIC religion?
+# (Part 1 only grouped counties by population cluster and checked
+# overall Religious proportion -- this checks each individual
+# religion against raw population directly)
+# ------------------------------------------------------------------
+religions = names(utah)[-c(1:4, ncol(utah))]
+
+utah %>%
+  pivot_longer(names_to = "Religion", values_to = "Proportion", cols = all_of(religions)) %>%
+  ggplot(aes(x = Pop_2010, y = Proportion)) +
+  geom_point() + geom_smooth(method = "lm") +
+  facet_wrap(~Religion, scales = "free_y") +
+  theme_bw() + theme(panel.grid = element_blank(), strip.background = element_rect(fill = "Gray"))
+
+utah %>%
+  pivot_longer(names_to = "Religion", values_to = "Proportion", cols = all_of(religions)) %>%
+  group_by(Religion) %>%
+  summarize(Correlation_with_Pop = cor(Pop_2010, Proportion)) %>%
+  arrange(desc(abs(Correlation_with_Pop)))
+
 
 # Look through those plots and answer the following questions:
 # 1.  Which religious group correlates most strongly in a given area with the proportion of non-religious people?
+#     LDS correlates most strongly with the proportion of non-religious people (r = -0.87 with Non-Religious, equivalently
+#     +0.87 with Religious, since these two columns are complements that sum to 1).
 # 2.  What is the direction of that correlation?
+#     Direction: negative, higher LDS population means lower non-religious proportion. (Episcopal Church is a distant second
+#     at about -0.60.)
 # 3.  What can you say about the relationships shown here?
+#     LDS is the only group with a strong, clear relationship, because it dominates the "Religious" category in most counties
+#     and is effectively driving the overall Religious/Non-Religious split. Every other religion is a small minority in most 
+#     counties. Many counties sit at or near 0 for groups like Muslim, Greek Orthodox, or Buddhism-Mahayana, so those facets
+#     are mostly scatter with no reliable trend given so little data per group.
 # 4.  Examine the axis scales. How could you modify the code above to more accurately portray values on an "equal footing?"
+#     facet_wrap(~Religion, scales = "free") lets each panel's x-axis rescale independently, so a religion that only ever
+#     reaches 0.02 gets stretched to look just as dramatic as LDS reaching 0.9. Switching to scales = "fixed" (or dropping
+#     scales entirely) would force all panels to share the same axis range, so proportions are honestly comparable across religions.
+# Extra: Muslim proportion correlates most strongly with county population, at r = 0.76, a fairly strong positive relationship,
+#     meaning more populous counties tend to have a higher proportion of Muslim residents. Everything else is much weaker (next is 
+#     Pentecostal Church of God at only 0.28), and several, including LDS at essentially r = 0, show no real relationship with
+#     population size at all.
 
 # UPLOAD YOUR ANSWERS TO CANVAS
 # DON'T FORGET TO PUSH YOUR TIDY CODE TO GITHUB AS WELL!
