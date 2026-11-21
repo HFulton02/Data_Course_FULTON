@@ -1,0 +1,20 @@
+Assignment 8 - Answers
+
+1. Are any of your predicted response values from your best model scientifically meaningless? Explain.
+
+Yes. The first hypothetical row (Nitrogen = 0, Light = 0) predicts a GrowthRate of about -11.4. A growth rate can't be negative in reality (mushrooms can't shrink below not growing at all), so this prediction is scientifically meaningless -- it's an artifact of extrapolating a linear model to low/boundary input values.
+
+2. In your plots, did you find any non-linear relationships? Do a bit of research online and give a link to at least one resource explaining how to deal with modeling non-linear relationships in R.
+
+Yes -- the Nitrogen vs. GrowthRate scatterplot curves rather than following a straight line (growth rate rises quickly then levels off), suggesting a non-linear relationship that a simple straight lm() fit doesn't fully capture.
+
+Resource: https://www.statmethods.net/advstats/nonlinear.html
+
+3. Write the code you would use to model the data found in "/Data/non_linear_relationship.csv" with a linear model (there are a few ways of doing this).
+
+nonlin = read.csv("non_linear_relationship.csv")
+
+nonlin_mod = lm(response ~ poly(predictor, 2), data = nonlin)
+summary(nonlin_mod)$r.squared
+
+A straight lm() already gets a decent R-squared (~0.90), but there's visible curvature left in the residuals. Since lm() can still fit a curve as long as the curve is linear in its coefficients, adding a squared term keeps it a "linear model" while fitting the curve. R-squared improves to about 0.98 with the quadratic term added, confirming the relationship is better described as non-linear.
